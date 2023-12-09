@@ -5,15 +5,15 @@ namespace Bee.Timer
 {
     public class Timer
     {
-        public static void run(int seconds, Action callback = null)
+        public static void run(int milliseconds, Action callback = null)
         {
-            if (!(seconds > 0))
+            if (!(milliseconds > 0))
                 throw new ArgumentException();
 
-            var dt = DateTime.Now.AddSeconds(seconds);
+            var dt = DateTime.Now.AddMilliseconds(milliseconds);
 
             new Thread(() => {
-                while (DateTime.Now.Second < dt.Second)
+                while (DateTime.Now < dt)
                 {
                     // Sleep
                 }
