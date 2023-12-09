@@ -1,4 +1,4 @@
-# Bee.Timet
+# Bee.Timer
 A very simple way to work with the Timer
 
 ## How use?
