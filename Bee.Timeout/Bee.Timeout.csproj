@@ -7,8 +7,8 @@
     <ProjectGuid>{BB548005-B894-426E-BAA1-4A984FEACDBD}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Bee.Timer</RootNamespace>
-    <AssemblyName>Bee.Timer</AssemblyName>
+    <RootNamespace>Bee.Timeout</RootNamespace>
+    <AssemblyName>Bee.Timeout</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -40,7 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Timer.cs" />
+    <Compile Include="Timeout.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

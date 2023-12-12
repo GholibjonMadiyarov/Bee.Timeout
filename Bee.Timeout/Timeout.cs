@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading;
 
-namespace Bee.Timer
+namespace Bee.Timeout
 {
-    public class Timer
+    public class Timeout
     {
         public static void run(int milliseconds, Action callback = null)
         {
