@@ -1,5 +1,5 @@
 # Bee.Timeout
-A very simple way to work with the Timer
+A very simple way to work with the Timeout
 
 ## How use?
 
