@@ -8,6 +8,7 @@ using Bee.Timeout;
 
 static void Main(string[] args)
 {
+    // 15 seconds
     Timeout.run(15, callback);
 }
 
