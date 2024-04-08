@@ -6,14 +6,14 @@ namespace Bee.Timeout
     public class Timeout
     {
         DateTime dt;
-        long milliseconds;
+        long seconds;
 
-        public static void run(int milliseconds, Action callback = null)
+        public static void run(int seconds, Action callback = null)
         {
-            if (!(milliseconds > 0))
-                throw new ArgumentException();
+            if (!(seconds > 0))
+                seconds = 30;
 
-            var dt = DateTime.Now.AddMilliseconds(milliseconds);
+            var dt = DateTime.Now.AddSeconds(seconds);
 
             new Thread(() => {
                 while (DateTime.Now < dt)
@@ -27,16 +27,16 @@ namespace Bee.Timeout
             { IsBackground = true }.Start();
         }
 
-        public void start(int milliseconds, Action callback = null)
+        public void start(int seconds, Action callback = null)
         {
-            if (!(milliseconds > 0))
-                throw new ArgumentException();
+            if (!(seconds > 0))
+                seconds = 30;
 
-            this.milliseconds = milliseconds;
-            dt = DateTime.Now.AddMilliseconds(this.milliseconds);
+            this.seconds = seconds;
+            this.dt = DateTime.Now.AddSeconds(this.seconds);
 
             new Thread(() => {
-                while (DateTime.Now < dt)
+                while (DateTime.Now < this.dt)
                 {
                     // Sleep
                 }
@@ -49,7 +49,7 @@ namespace Bee.Timeout
 
         public void refresh()
         {
-            dt = DateTime.Now.AddMilliseconds(milliseconds);
+            this.dt = DateTime.Now.AddSeconds(seconds);
         }
     }
 }
