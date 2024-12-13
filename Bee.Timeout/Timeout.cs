@@ -5,51 +5,96 @@ namespace Bee.Timeout
 {
     public class Timeout
     {
-        DateTime dt;
-        long seconds;
+        private  bool b;
+        private  DateTime dt;
+        private  int s;
+        private SynchronizationContext synchronizationContext;
 
-        public static void run(int seconds, Action callback = null)
+        public Timeout(SynchronizationContext synchronizationContext = null) 
+        { 
+            b = true;
+
+            //30 seconds
+            s = 30;
+            dt = DateTime.Now.AddSeconds(s);
+
+            this.synchronizationContext = synchronizationContext;
+        }
+
+        public static void start(int seconds = 30, Action callback = null, SynchronizationContext synchronizationContext = null)
         {
-            if (!(seconds > 0))
+            if (seconds <= 0)
                 seconds = 30;
 
             var dt = DateTime.Now.AddSeconds(seconds);
 
-            new Thread(() => {
-                while (DateTime.Now < dt)
-                {
-                    // Sleep
-                }
+
+            var t = new Thread(() =>
+            {
+                while (DateTime.Now < dt)   
+                    Thread.Sleep(1000);
 
                 if (callback != null)
-                    callback();
-            })
-            { IsBackground = true }.Start();
+                {
+                    if (synchronizationContext != null)
+                    {
+                        synchronizationContext.Post(_ => callback(), null);
+                    }
+                    else
+                    {
+                        callback();
+                    }
+                }
+            });
+
+            t.IsBackground = true;
+            t.Start();
         }
 
-        public void start(int seconds, Action callback = null)
+        public void begin(int seconds, Action callback = null)
         {
-            if (!(seconds > 0))
+            if (seconds <= 0)
                 seconds = 30;
 
-            this.seconds = seconds;
-            this.dt = DateTime.Now.AddSeconds(this.seconds);
+            s = seconds;
 
-            new Thread(() => {
-                while (DateTime.Now < this.dt)
+            dt = DateTime.Now.AddSeconds(s);
+
+
+            var t = new Thread(() =>
+            {
+                while (DateTime.Now < dt)  
+                    Thread.Sleep(1000); 
+
+                if (b)
                 {
-                    // Sleep
+                    if (callback != null)
+                    {
+                        if (synchronizationContext != null)
+                        {
+                            synchronizationContext.Post(_ => callback(), null);
+                        }
+                        else
+                        {
+                            callback();
+                        }
+                    }
                 }
+            });
 
-                if (callback != null)
-                    callback();
-            })
-            { IsBackground = true }.Start();
+            t.IsBackground = true;
+            t.Start();
+        }
+
+        public void end()
+        { 
+            dt = DateTime.Now;
+            b = false;
         }
 
         public void refresh()
         {
-            this.dt = DateTime.Now.AddSeconds(seconds);
+            dt = DateTime.Now.AddSeconds(s);
         }
     }
 }
