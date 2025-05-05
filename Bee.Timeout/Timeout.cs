@@ -1,100 +1,97 @@
 ﻿using System;
+using System.ComponentModel;
+using System.IO;
+using System.Reflection;
 using System.Threading;
 
 namespace Bee.Timeout
 {
     public class Timeout
     {
-        private  bool b;
-        private  DateTime dt;
-        private  int s;
-        private SynchronizationContext synchronizationContext;
+        private bool active;
+        private int seconds;
+        private Action callback;
 
-        public Timeout(SynchronizationContext synchronizationContext = null) 
+        public Timeout() 
         { 
-            b = true;
+            this.active = false;
 
             //30 seconds
-            s = 30;
-            dt = DateTime.Now.AddSeconds(s);
+            this.seconds = 30;
 
-            this.synchronizationContext = synchronizationContext;
+            Log.info(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Version.txt"), "TimeoutVersion:" + Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString());
         }
 
-        public static void start(int seconds = 30, Action callback = null, SynchronizationContext synchronizationContext = null)
+        public void version(string path = null)
         {
-            if (seconds <= 0)
-                seconds = 30;
-
-            var dt = DateTime.Now.AddSeconds(seconds);
-
-
-            var t = new Thread(() =>
+            if (path != null)
             {
-                while (DateTime.Now < dt)   
-                    Thread.Sleep(1000);
-
-                if (callback != null)
-                {
-                    if (synchronizationContext != null)
-                    {
-                        synchronizationContext.Post(_ => callback(), null);
-                    }
-                    else
-                    {
-                        callback();
-                    }
-                }
-            });
-
-            t.IsBackground = true;
-            t.Start();
+                Log.info(path, "TimeoutVersion:" + Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString());
+            }
         }
 
-        public void begin(int seconds, Action callback = null)
+        public static void sleep(int seconds = 30, Action callback = null)
         {
-            if (seconds <= 0)
-                seconds = 30;
-
-            s = seconds;
-
-            dt = DateTime.Now.AddSeconds(s);
-
-
-            var t = new Thread(() =>
+            if (seconds > 0)
             {
-                while (DateTime.Now < dt)  
-                    Thread.Sleep(1000); 
-
-                if (b)
+                var t = new Thread(() =>
                 {
+                    while (true) 
+                    {
+                        Thread.Sleep(1000);
+
+                        if (seconds == 0)
+                            break;
+
+                        seconds--;
+                    }
+
                     if (callback != null)
-                    {
-                        if (synchronizationContext != null)
-                        {
-                            synchronizationContext.Post(_ => callback(), null);
-                        }
-                        else
-                        {
-                            callback();
-                        }
-                    }
-                }
-            });
+                        callback();
+                });
 
-            t.IsBackground = true;
-            t.Start();
+                t.IsBackground = true;
+                t.Start();
+            }
         }
 
-        public void end()
-        { 
-            dt = DateTime.Now;
-            b = false;
-        }
-
-        public void refresh()
+        public void start(int seconds = 30, Action callback = null)
         {
-            dt = DateTime.Now.AddSeconds(s);
+            this.seconds = seconds;
+            this.active = true;
+
+            if (this.seconds > 0)
+            {
+                var t = new Thread(() =>
+                {
+                    while (true)
+                    {
+                        Thread.Sleep(1000);
+
+                        if (this.seconds == 0)
+                            break;
+
+                        this.seconds--;
+                    }
+
+                    if (this.active && callback != null)
+                        callback();
+                });
+
+                t.IsBackground = true;
+                t.Start();
+            }
+        }
+
+        public void stop()
+        { 
+            this.seconds = 0;
+            this.active = false;
+        }
+
+        public void refresh(int seconds = 30)
+        {
+            this.seconds = seconds;
         }
     }
 }
