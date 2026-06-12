@@ -8,19 +8,22 @@ namespace Bee.Timeout
     public class Timeout
     {
         private bool active;
-        private int seconds;
+        private DateTime now;
+
         public string token;
 
         public event Action<string> TimeoutComplate;
         public event Action<string> TimeoutProcess;
         public event Action<string> TimeoutStop;
 
+        private object sync = new object();
+
         public Timeout() 
         { 
             this.active = false;
 
-            //30 seconds
-            this.seconds = 30;
+            //Now
+            this.now = DateTime.Now;
 
             this.token = null;
 
@@ -42,16 +45,16 @@ namespace Bee.Timeout
                 return;
             }
 
+            DateTime now = DateTime.Now.AddSeconds(seconds);
+
             var t = new Thread(() =>
             {
                 while (true)
                 {
                     Thread.Sleep(1000);
 
-                    if (seconds == 0)
+                    if (DateTime.Now >= now)
                         break;
-
-                    seconds--;
 
                     if (process != null)
                         process();
@@ -67,17 +70,16 @@ namespace Bee.Timeout
 
         public void start(int seconds = 30)
         {
-            if (active == true)
+            lock (sync)
             {
-                return;
-            }
+                if (this.active == true)
+                {
+                    return;
+                }
 
-            this.seconds = seconds;
-            this.active = true;
+                this.now = DateTime.Now.AddSeconds(seconds);
 
-            if (this.seconds == 0)
-            {
-                return;
+                this.active = true;
             }
 
             var t = new Thread(() =>
@@ -86,19 +88,28 @@ namespace Bee.Timeout
                 {
                     Thread.Sleep(1000);
 
-                    if (this.seconds == 0)
-                        break;
-
-                    this.seconds--;
+                    lock (sync) 
+                    {
+                        if (DateTime.Now >= this.now)
+                        {
+                            break;
+                        }
+                    }
 
                     OnTimeoutProcess(token);
                 }
 
-                if (this.active == true)
+                lock (sync) 
                 {
-                    active = false;
-                    OnTimeoutComplate(token);
+                    if (this.active == false)
+                    {
+                        return;
+                    }
                 }
+
+                active = false;
+
+                OnTimeoutComplate(token);
             });
 
             t.IsBackground = true;
@@ -107,20 +118,29 @@ namespace Bee.Timeout
 
         public void stop()
         { 
-            this.seconds = 0;
-            this.active = false;
-
+            lock (sync) 
+            {
+                this.now = DateTime.Now;
+                this.active = false;
+            }
+            
             OnTimeoutStop(token);
         }
 
         public void refresh(int seconds = 30)
         {
-            this.seconds = seconds;
+            lock (sync)
+            {
+                this.now = DateTime.Now.AddSeconds(seconds);
+            }
         }
 
         public int getSeconds()
         {
-            return this.seconds;
+            lock (sync)
+            {
+                return (int)Math.Round((this.now - DateTime.Now).TotalSeconds);
+            }
         }
 
         protected void OnTimeoutComplate(string token)
